@@ -1,141 +1,204 @@
-from django.contrib.auth import authenticate, login, logout
-from django.core.context_processors import csrf
-from django.shortcuts import render_to_response, HttpResponseRedirect
+from labgeeksrpg.delphi.models import *
+from labgeeksrpg.delphi.forms import *
+from labgeeksrpg.sybil.models import Tag
+from django.shortcuts import render_to_response
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from datetime import datetime
+from django.http import HttpResponseRedirect
 from django.template import RequestContext
-from labgeeksrpg.forms import LoginForm
-import datetime
-from labgeeksrpg.labgeeksrpg_config.models import Notification
-from labgeeksrpg.labgeeksrpg_config.forms import NotificationForm
+from django.core.context_processors import csrf
+from django.utils.html import strip_tags
 
 
-def hello(request):
-    """ The site dashboard.
-    """
-    #when a user is logged-in correctly
-    if request.user.is_authenticated():
-        locations = request.user.location_set.all()
-        shifts = request.user.shift_set.all()
-        clockin_time = 0
-        if locations and shifts:
-            clockin_time = shifts[len(shifts) - 1].intime
-
-        now = datetime.datetime.now()
-
-        notifications = Notification.objects.all()
-        events = []
-        alerts = []
-        for noti in notifications:
-            if noti.due_date:
-                if now.date() - noti.due_date.date() >= datetime.timedelta(days=1):
-                    noti.archived = True
-                elif not noti.due_date - now > datetime.timedelta(days=7) and not noti.archived:
-                    events.append(noti)
-            else:
-                if not noti.archived:
-                    alerts.append(noti)
-        events.sort(key=lambda x: x.due_date)
-
-        c = {}
-        c.update(csrf(request))
-
-        can_Add = False
-        if request.user.has_perm('labgeeksrpg_config.add_notification'):
-            can_Add = True
-
-        form_is_valid = True
-        if request.method == 'POST':
-            archive_ids = request.POST.getlist('pk')
-            if archive_ids:
-                for archive_id in archive_ids:
-                    notif = Notification.objects.get(pk=archive_id)
-                    notif.archived = True
-                    notif.save()
-                return HttpResponseRedirect('/')
-
-            form = NotificationForm(request.POST)
-            if form.is_valid():
-                form_is_valid = True
-                notification = form.save(commit=False)
-                notification.user = request.user
-                if notification.due_date:
-                    if now.date() - notification.due_date.date() >= datetime.timedelta(days=1):
-                        notification.archived = True
-                notification.save()
-                return HttpResponseRedirect('/')
-            else:
-                form_is_valid = False
-        else:
-            form = NotificationForm()
-
-        workshifts = request.user.workshift_set.all()
-        today_past_shifts = []
-        today_future_shifts = []
-        for shift in workshifts:
-            in_time = shift.scheduled_in
-            out_time = shift.scheduled_out
-            if (in_time.year == now.year and in_time.month == now.month and in_time.day == now.day):
-                if now - out_time > datetime.timedelta(seconds=1):
-                    today_past_shifts.append(shift)
-                else:
-                    today_future_shifts.append(shift)
-        args = {
-            'request': request,
-            'locations': locations,
-            'clockin_time': clockin_time,
-            'today_past_shifts': today_past_shifts,
-            'today_future_shifts': today_future_shifts,
-            'events': events,
-            'alerts': alerts,
-            'can_Add': can_Add,
-        }
-        return render_to_response('dashboard.html', locals(), context_instance=RequestContext(request))
-    else:
-        return render_to_response('hello.html', locals())
+def view_question(request, q_id):
+    can_answer = False
+    can_select_answer = False
+    try:
+        question = Question.objects.get(id=q_id)
+    except Question.DoesNotExist:
+        return render_to_response('no_question.html', {"request": request, 'urlhack': True, 'bad_form': False, })
+    if question.times_viewed is None:
+        ''' This is just in case we have a null times_viewed (as it is allowed
+        by the model) '''
+        question.times_viewed = 0
+    question.times_viewed = question.times_viewed + 1
+    try:
+        answers = Answer.objects.filter(question=question).exclude(is_best=True)
+        try:
+            best_answers = Answer.objects.filter(question=question, is_best=True)
+        except Answer.DoesNotExist:
+            best_answers = None
+    except Answer.DoesNotExist:
+        answers = None
+        best_answers = None
+    if request.user.has_perm('delphi.can_answer'):
+        can_answer = True
+    if request.user.has_perm('delphi.can_select_answer'):
+        can_select_answer = True
+    args = {
+        'question': question.question,
+        'more_info': question.more_info,
+        'best_answer': best_answers,
+        'answers': answers,
+        'date': question.date,
+        'author': question.user,
+        'request': request,
+        'question_id': q_id,
+        'can_answer': can_answer,
+        'tags': question.tags.all(),
+        'can_select_answer': can_select_answer,
+    }
+    return render_to_response('view_question.html', args)
 
 
-def labgeeks_login(request):
-    """ Login a user. Called by the @login_required decorator.
-    """
-
-    # Get a token to protect from cross-site request forgery
+@login_required
+def create_question(request):
     c = {}
     c.update(csrf(request))
-    if request.user.is_authenticated():
-        try:
-            return HttpResponseRedirect(request.GET['next'])
-        except:
-            return HttpResponseRedirect('/')
-    elif request.method == 'POST':
-        form = LoginForm(request.POST)
+    if request.method == 'POST':
+        form = CreateQuestionForm(request.POST)
         if form.is_valid():
-            username = request.POST['username']
-            password = request.POST['password']
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                if user.is_active:
-                    login(request, user)
-                    try:
-                        return HttpResponseRedirect(request.GET['next'])
-                    except:
-                        #Redirects to the dashboard.
-                        return HttpResponseRedirect('/')
-                else:
-                    # Return a disabled account error
-                    return HttpResponseRedirect('/inactive/')
+            question = form.save(commit=False)
+            question.question = strip_tags(question.question)
+            question.more_info = strip_tags(question.more_info)
+            question.user = request.user
+            question.date = datetime.now().date()
+            question.save()
+            tags = request.POST.getlist('tags')
+            for tag in tags:
+                if tag != '':
+                    tag_tuple = Tag.objects.get_or_create(name=tag)
+                    question.tags.add(tag_tuple[0])
+            question.save()
+            return HttpResponseRedirect('/delphi/' + str(question.id) + '/')
+        else:
+            return render_to_response('no_question.html', {'request': request, 'urlhack': False, 'bad_form': True, })
     else:
-        form = LoginForm()
+        form = CreateQuestionForm()
+        form_fields = []
+        for field in form.visible_fields():
+            field_info = {
+                'help_text': field.help_text,
+                'label_tag': field.label_tag,
+                'field': field,
+            }
+            form_fields.append(field_info)
+        args = {
+            'form_fields': form_fields,
+            'tags': Tag.objects.all(),
+            'user': request.user,
+            'request': request,
+        }
+        return render_to_response('create_question.html', args, context_instance=RequestContext(request))
 
-    return render_to_response('login.html', locals(), context_instance=RequestContext(request))
+
+def delphi_home(request):
+    requested_tags = request.GET.getlist('tag')
+    QUESTIONS = []
+    tags = Tag.objects.all()
+    if requested_tags:
+        for tag in requested_tags:
+            tag_object = Tag.objects.get(name=tag)
+            tagged_qs = Question.objects.filter(tags=tag_object)
+            for tagged_q in tagged_qs:
+                if tagged_q not in QUESTIONS:
+                    QUESTIONS.append(tagged_q)
+    else:
+        try:
+            QUESTIONS = Question.objects.all()
+        except:
+            QUESTIONS = None
+    questions = []
+    for QUESTION in QUESTIONS:
+        question = {
+            'question': QUESTION.question,
+            'id': QUESTION.id,
+            'preview': QUESTION.more_info[:200],
+        }
+        questions.append(question)
+    can_add_question = request.user.has_perm('delphi.add_question')
+    return render_to_response('delphi.html', {'tags': tags, 'requested_tags': requested_tags, 'questions': questions, 'request': request, 'can_add_question': can_add_question, })
 
 
-def labgeeks_logout(request):
-    """ Manually log a user out.
-    """
-    logout(request)
-    return HttpResponseRedirect('/')
+def answer_question(request, q_id):
+    if not request.user.has_perm('delphi.can_answer'):
+        return render_to_response('403.html', locals())
+    try:
+        question = Question.objects.get(id=q_id)
+    except Question.DoesNotExist:
+        return render_to_response('no_question.html', {"request": request, 'urlhack': True, 'bad_form': False, })
+    c = {}
+    c.update(csrf(request))
+    if request.method == 'POST':
+        form = CreateAnswerForm(request.POST)
+        if form.is_valid():
+            answer = form.save()
+            answer.answer = strip_tags(answer.answer)
+            answer.user = request.user
+            answer.date = datetime.now().date()
+            answer.question = question
+            answer.save()
+        if question.times_viewed is None:
+            ''' This is just in case we have a null times_viewed (as it is allowed
+            by the model) '''
+            question.times_viewed = 0
+        else:
+            ''' We count times_viewed backwards one because the page was viewed
+            to get here in the normal flow, and will be viewed again, but it should
+            only be counted once'''
+            question.times_viewed = question.times_viewed - 1
+        return HttpResponseRedirect('/delphi/' + str(question.id) + '/')
+    else:
+        form = CreateAnswerForm()
+        form_fields = []
+        for field in form.visible_fields():
+            field_info = {
+                'help_text': field.help_text,
+                'label_tag': field.label_tag,
+                'field': field,
+            }
+            form_fields.append(field_info)
+        args = {
+            'question': question.question,
+            'more_info': question.more_info,
+            'asker': question.user,
+            'date': question.date,
+            'form_fields': form_fields,
+            'user': request.user,
+            'request': request,
+        }
+        return render_to_response('create_answer.html', args, context_instance=RequestContext(request))
 
 
-def inactive(request):
-    """ Return if a user's account has been disabled.
-    """
-    return render_to_response('inactive.html', locals())
+def select_answer(request, q_id):
+    if not request.user.has_perm('delphi.can_select_answer'):
+        return render_to_response('403.html', locals())
+    if request.method == 'GET':
+        answer_ids = request.GET.getlist('id')
+        try:
+            question = Question.objects.get(id=q_id)
+            try:
+                best_answer = Answer.objects.filter(question=question, is_best=True)
+                for answer in best_answer:
+                    answer.is_best = False
+                    answer.save()
+            except Answer.DoesNotExist:
+                best_answer = None
+            try:
+                for pk in answer_ids:
+                    new_best_answer = Answer.objects.filter(question=question).get(id=pk)
+                    new_best_answer.is_best = True
+                    new_best_answer.save()
+            except Answer.DoesNotExist:
+                return render_to_response('no_question.html', {"request": request, 'urlhack': True, 'bad_form': False, })
+        except Question.DoesNotExist:
+            return render_to_response('no_question.html', {'request': request, 'urlhack': True, 'bad_form': False, })
+    if question.times_viewed is None:
+        question.times_viewed = 0
+    else:
+        ''' We count times_viewed backwards one because the page was viewed
+        to get here in the normal flow, and will be viewed again, but it should
+        only be counted once'''
+        question.times_viewed = question.times_viewed - 1
+    return HttpResponseRedirect('/delphi/' + str(q_id) + '/')
