@@ -1,7 +1,7 @@
 import datetime
 from haystack.indexes import *
 from haystack import site
-from delphi.models import Question, Answer
+from labgeeks_delphi.models import Question, Answer
 
 
 class QuestionIndex(RealTimeSearchIndex):

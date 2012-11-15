@@ -18,7 +18,7 @@ class Question(models.Model):
     user = models.ForeignKey(User, null=True)
     date = models.DateField()
     times_viewed = models.IntegerField(null=True, default=0)
-    tags = models.ManyToManyField('sybil.Tag', null=True)
+    tags = models.ManyToManyField('labgeeks_sybil.Tag', null=True)
 
     def __unicode__(self):
         return self.question

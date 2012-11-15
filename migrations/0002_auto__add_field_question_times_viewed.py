@@ -10,12 +10,12 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
 
         # Adding field 'Question.times_viewed'
-        db.add_column('delphi_question', 'times_viewed', self.gf('django.db.models.fields.IntegerField')(default=0, null=True), keep_default=False)
+        db.add_column('labgeeks_delphi_question', 'times_viewed', self.gf('django.db.models.fields.IntegerField')(default=0, null=True), keep_default=False)
 
     def backwards(self, orm):
 
         # Deleting field 'Question.times_viewed'
-        db.delete_column('delphi_question', 'times_viewed')
+        db.delete_column('labgeeks_delphi_question', 'times_viewed')
 
     models = {
         'auth.group': {
@@ -54,16 +54,16 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'delphi.answer': {
+        'labgeeks_delphi.answer': {
             'Meta': {'object_name': 'Answer'},
             'answer': ('django.db.models.fields.TextField', [], {}),
             'date': ('django.db.models.fields.DateField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_best': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'question': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['delphi.Question']", 'null': 'True', 'blank': 'True'}),
+            'question': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_delphi.Question']", 'null': 'True', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True'})
         },
-        'delphi.question': {
+        'labgeeks_delphi.question': {
             'Meta': {'object_name': 'Question'},
             'date': ('django.db.models.fields.DateField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -74,4 +74,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['delphi']
+    complete_apps = ['labgeeks_delphi']

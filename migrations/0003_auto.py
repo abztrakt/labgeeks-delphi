@@ -10,17 +10,17 @@ class Migration(SchemaMigration):
     def forwards(self, orm):
 
         # Adding M2M table for field tags on 'Question'
-        db.create_table('delphi_question_tags', (
+        db.create_table('labgeeks_delphi_question_tags', (
             ('id', models.AutoField(verbose_name='ID', primary_key=True, auto_created=True)),
-            ('question', models.ForeignKey(orm['delphi.question'], null=False)),
-            ('tag', models.ForeignKey(orm['sybil.tag'], null=False))
+            ('question', models.ForeignKey(orm['labgeeks_delphi.question'], null=False)),
+            ('tag', models.ForeignKey(orm['labgeeks_sybil.tag'], null=False))
         ))
-        db.create_unique('delphi_question_tags', ['question_id', 'tag_id'])
+        db.create_unique('labgeeks_delphi_question_tags', ['question_id', 'tag_id'])
 
     def backwards(self, orm):
 
         # Removing M2M table for field tags on 'Question'
-        db.delete_table('delphi_question_tags')
+        db.delete_table('labgeeks_delphi_question_tags')
 
     models = {
         'auth.group': {
@@ -59,26 +59,26 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'delphi.answer': {
+        'labgeeks_delphi.answer': {
             'Meta': {'object_name': 'Answer'},
             'answer': ('django.db.models.fields.TextField', [], {}),
             'date': ('django.db.models.fields.DateField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_best': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'question': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['delphi.Question']", 'null': 'True', 'blank': 'True'}),
+            'question': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_delphi.Question']", 'null': 'True', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True'})
         },
-        'delphi.question': {
+        'labgeeks_delphi.question': {
             'Meta': {'object_name': 'Question'},
             'date': ('django.db.models.fields.DateField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'more_info': ('django.db.models.fields.TextField', [], {}),
             'question': ('django.db.models.fields.CharField', [], {'max_length': "'200'"}),
-            'tags': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['sybil.Tag']", 'null': 'True', 'symmetrical': 'False'}),
+            'tags': ('django.db.models.fields.related.ManyToManyField', [], {'to': "orm['labgeeks_sybil.Tag']", 'null': 'True', 'symmetrical': 'False'}),
             'times_viewed': ('django.db.models.fields.IntegerField', [], {'default': '0', 'null': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True'})
         },
-        'sybil.tag': {
+        'labgeeks_sybil.tag': {
             'Meta': {'object_name': 'Tag'},
             'description': ('django.db.models.fields.TextField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -86,4 +86,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['delphi']
+    complete_apps = ['labgeeks_delphi']

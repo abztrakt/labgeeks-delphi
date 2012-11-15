@@ -9,32 +9,32 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         # Adding model 'Question'
-        db.create_table('delphi_question', (
+        db.create_table('labgeeks_delphi_question', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('question', self.gf('django.db.models.fields.CharField')(max_length='200')),
             ('more_info', self.gf('django.db.models.fields.TextField')()),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True)),
             ('date', self.gf('django.db.models.fields.DateField')()),
         ))
-        db.send_create_signal('delphi', ['Question'])
+        db.send_create_signal('labgeeks_delphi', ['Question'])
 
         # Adding model 'Answer'
-        db.create_table('delphi_answer', (
+        db.create_table('labgeeks_delphi_answer', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
             ('answer', self.gf('django.db.models.fields.TextField')()),
             ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'], null=True)),
             ('date', self.gf('django.db.models.fields.DateField')()),
-            ('question', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['delphi.Question'], null=True, blank=True)),
+            ('question', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['labgeeks_delphi.Question'], null=True, blank=True)),
             ('is_best', self.gf('django.db.models.fields.BooleanField')(default=False)),
         ))
-        db.send_create_signal('delphi', ['Answer'])
+        db.send_create_signal('labgeeks_delphi', ['Answer'])
 
     def backwards(self, orm):
         # Deleting model 'Question'
-        db.delete_table('delphi_question')
+        db.delete_table('labgeeks_delphi_question')
 
         # Deleting model 'Answer'
-        db.delete_table('delphi_answer')
+        db.delete_table('labgeeks_delphi_answer')
 
     models = {
         'auth.group': {
@@ -73,16 +73,16 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'delphi.answer': {
+        'labgeeks_delphi.answer': {
             'Meta': {'object_name': 'Answer'},
             'answer': ('django.db.models.fields.TextField', [], {}),
             'date': ('django.db.models.fields.DateField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'is_best': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
-            'question': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['delphi.Question']", 'null': 'True', 'blank': 'True'}),
+            'question': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['labgeeks_delphi.Question']", 'null': 'True', 'blank': 'True'}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'null': 'True'})
         },
-        'delphi.question': {
+        'labgeeks_delphi.question': {
             'Meta': {'object_name': 'Question'},
             'date': ('django.db.models.fields.DateField', [], {}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -92,4 +92,4 @@ class Migration(SchemaMigration):
         }
     }
 
-    complete_apps = ['delphi']
+    complete_apps = ['labgeeks_delphi']
