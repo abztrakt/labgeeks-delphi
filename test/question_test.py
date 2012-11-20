@@ -5,7 +5,7 @@ Tests creation of questions
 from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User
-from delphi.models import *
+from labgeeks_delphi.models import *
 import datetime
 import pdb
 
@@ -25,9 +25,9 @@ class QuestionTestCase(TestCase):
         self.assertEqual(resp.status_code, 200)
         resp = client.post('/delphi/create/', {'question': 'How do I internet?', 'more_info': 'I cannot internet.  How do I internet?  herpderp'})
         self.assertEqual(resp.status_code, 302)
-        resp = client.get('/delphi/1/')
-        self.assertEqual(resp.status_code, 200)
-        self.assertContains(resp, 'herpderp')
+        self.assertEqual(resp1.status_code, 200)
+        pdb.set_trace()
+        self.assertContains(resp1, 'herpderp')
         client.logout()
         client.login(username='Dawg2', password='pass')
         resp = client.get('/delphi/1/')

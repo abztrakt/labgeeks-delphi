@@ -15,10 +15,10 @@ class Question(models.Model):
 
     question = models.CharField(max_length='200')
     more_info = models.TextField()
-    user = models.ForeignKey(User, null=True)
+    user = models.ForeignKey(User, null=True, blank=True)
     date = models.DateField()
     times_viewed = models.IntegerField(null=True, default=0)
-    tags = models.ManyToManyField('labgeeks_sybil.Tag', null=True)
+    tags = models.ManyToManyField('labgeeks_sybil.Tag', null=True, blank=True)
 
     def __unicode__(self):
         return self.question
@@ -37,7 +37,7 @@ class Answer(models.Model):
         )
 
     answer = models.TextField()
-    user = models.ForeignKey(User, null=True)
+    user = models.ForeignKey(User, null=True, blank=True)
     date = models.DateField()
     question = models.ForeignKey(Question, null=True, blank=True)
     is_best = models.BooleanField(default=False)

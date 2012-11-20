@@ -5,7 +5,7 @@ tests answer creation and selection
 from django.test import TestCase
 from django.test.client import Client
 from django.contrib.auth.models import User, Permission
-from delphi.models import *
+from labgeeks_delphi.models import *
 from django.contrib.contenttypes.models import ContentType
 import datetime
 import pdb
@@ -41,6 +41,7 @@ class AnswerTestCase(TestCase):
         client.login(username='AnswerMan', password='pass')
         resp = client.get('/delphi/1/answer/')
         self.assertEqual(resp.status_code, 200)
+        pdb.set_trace()
         self.assertContains(resp, 'Answering question')
         resp = client.post('/delphi/1/answer/', {'answer': 'With your brain'})
         self.assertEqual(resp.status_code, 302)
