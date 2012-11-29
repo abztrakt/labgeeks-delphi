@@ -117,12 +117,12 @@ def delphi_home(request):
             'preview': QUESTION.more_info[:200],
         }
         questions.append(question)
-    can_add_question = request.user.has_perm('delphi.add_question')
+    can_add_question = request.user.has_perm('labgeeks_delphi.add_question')
     return render_to_response('delphi.html', {'tags': tags, 'requested_tags': requested_tags, 'questions': questions, 'request': request, 'can_add_question': can_add_question, })
 
 
 def answer_question(request, q_id):
-    if not request.user.has_perm('delphi.can_answer'):
+    if not request.user.has_perm('labgeeks_delphi.can_answer'):
         return render_to_response('403.html', locals())
     try:
         question = Question.objects.get(id=q_id)
@@ -172,7 +172,7 @@ def answer_question(request, q_id):
 
 
 def select_answer(request, q_id):
-    if not request.user.has_perm('delphi.can_select_answer'):
+    if not request.user.has_perm('labgeeks_delphi.can_select_answer'):
         return render_to_response('403.html', locals())
     if request.method == 'GET':
         answer_ids = request.GET.getlist('id')
