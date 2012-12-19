@@ -7,7 +7,7 @@ setup(
     url = 'http://github.com/abztrakt/labgeeks_delphi',
     description = 'The knowledge base app in the labgeeks suite of student staff management tools.',
     author = 'Craig Stimmel',
-    packages = find_packages(),
+    packages = ['labgeeks_delphi',],
     install_requires = [
         'setuptools',
         'labgeeks-sybil',
