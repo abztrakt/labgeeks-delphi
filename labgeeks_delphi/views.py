@@ -123,7 +123,7 @@ def delphi_home(request):
 
 def answer_question(request, q_id):
     if not request.user.has_perm('labgeeks_delphi.can_answer'):
-        return render_to_response('403.html', locals())
+        return render_to_response('403.html', {'request': request,})
     try:
         question = Question.objects.get(id=q_id)
     except Question.DoesNotExist:
@@ -173,7 +173,7 @@ def answer_question(request, q_id):
 
 def select_answer(request, q_id):
     if not request.user.has_perm('labgeeks_delphi.can_select_answer'):
-        return render_to_response('403.html', locals())
+        return render_to_response('403.html', {'request': request})
     if request.method == 'GET':
         answer_ids = request.GET.getlist('id')
         try:
